@@ -7,7 +7,7 @@ using CK.SqlServer.Setup;
 
 namespace CK.DB.TokenStore
 {
-    [SqlTable( "tUserSimpleInvitation", Schema = "CK", Package = typeof( Package ) ),
+    [SqlTable( "tTokenStore", Package = typeof( Package ) ),
      Versions( "1.0.0" )]
     public abstract partial class TokenStoreTable : SqlTable
     {
