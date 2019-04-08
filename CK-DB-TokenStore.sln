@@ -20,6 +20,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CK.DB.TokenStore", "CK.DB.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CK.DB.TokenStore.Tests", "Tests\CK.DB.TokenStore.Tests\CK.DB.TokenStore.Tests.csproj", "{F677A33B-3A2E-4CBA-9F02-3255716CD721}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeCakeBuilder", "CodecakeBuilder\CodeCakeBuilder.csproj", "{9FC32C4B-B97B-4540-845D-CB3DE8C8D807}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,6 +36,10 @@ Global
 		{F677A33B-3A2E-4CBA-9F02-3255716CD721}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F677A33B-3A2E-4CBA-9F02-3255716CD721}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F677A33B-3A2E-4CBA-9F02-3255716CD721}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FC32C4B-B97B-4540-845D-CB3DE8C8D807}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FC32C4B-B97B-4540-845D-CB3DE8C8D807}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FC32C4B-B97B-4540-845D-CB3DE8C8D807}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FC32C4B-B97B-4540-845D-CB3DE8C8D807}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
