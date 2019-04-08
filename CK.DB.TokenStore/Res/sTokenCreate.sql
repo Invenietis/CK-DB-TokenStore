@@ -1,5 +1,9 @@
 --SetupConfig: {}
-
+--
+-- Creates a now token for an unique (@TokenKey, @TokenInfo):
+-- if the couple (@TokenKey, @TokenInfo) already exists,
+-- the zero @TokenIdResult is returned with an empty @TokenResult.
+--
 create procedure CK.sTokenCreate
 (
      @ActorId int
