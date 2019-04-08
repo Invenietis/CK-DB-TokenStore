@@ -3,6 +3,9 @@ using CK.Core;
 
 namespace CK.DB.TokenStore
 {
+    /// <summary>
+    /// Simple POCO which represents token informations.
+    /// </summary>
     public interface ITokenInfo : IPoco
     {
         /// <summary>
@@ -13,6 +16,7 @@ namespace CK.DB.TokenStore
 
         /// <summary>
         /// Gets the token to use.
+        /// This token combines the TokenId and the TokenGUID.
         /// This property can only be read from the database.
         /// </summary>
         string Token { get; }
@@ -35,7 +39,9 @@ namespace CK.DB.TokenStore
         DateTime ExpirationDateUtc { get; set; }
 
         /// <summary>
-        /// The token current activity state.
+        /// Gets or set whether this token is active.
+        /// An inactive token acts as if it was expired.
+        /// See <see cref="TokenStoreTable.Activate"/>.
         /// </summary>
         bool Active { get; set; }
 
