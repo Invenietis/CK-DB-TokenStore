@@ -18,7 +18,7 @@ create table CK.tTokenStore
 	constraint FK_CK_TokenStore_CreatedById foreign key( CreatedById ) references CK.tUser( UserId )
 );
 
-insert into CK.tTokenStore(CreatedById, TokenKey, TokenScope, ExpirationDateUtc, TokenGuid, Active )
+insert into CK.tTokenStore( CreatedById, TokenKey, TokenScope, ExpirationDateUtc, TokenGuid, Active )
     values( 0, N'', '', N'0001-01-01', '00000000-0000-0000-0000-000000000000', 0 );
 
 --[endscript]

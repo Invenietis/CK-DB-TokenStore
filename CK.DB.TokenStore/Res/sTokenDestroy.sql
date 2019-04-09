@@ -12,11 +12,11 @@ begin
 
     --[beginsp]
 
-    --<PreDestroy />
+    --<PreDestroy revert />
 
     delete from CK.tTokenStore where TokenId = @TokenId;
 
-    --<PostDestroy revert />
+    --<PostDestroy />
 
     --[endsp]
 
