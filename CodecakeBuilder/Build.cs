@@ -46,20 +46,20 @@ namespace CodeCake
                                        .Where( p => !(p is SolutionFolder)
                                                     && p.Name != "CodeCakeBuilder" );
 
-            // We do not generate NuGet packages for /Tests projects for this solution.
-            var projectsToPublish = projects
-                                        .Where( p => !p.Path.Segments.Contains( "Tests" ) );
+            // We DO generate NuGet packages for /Tests projects for this solution.
+            var projectsToPublish = projects;
 
             // The SimpleRepositoryInfo should be computed once and only once.
             SimpleRepositoryInfo gitInfo = Cake.GetSimpleRepositoryInfo();
-            // This default global info will be replaced by Check-Repository task.
-            // It is allocated here to ease debugging and/or manual work on complex build script.
-            CheckRepositoryInfo globalInfo = new CheckRepositoryInfo( gitInfo, projectsToPublish );
+            CheckRepositoryInfo globalInfo = null;
+            NuGetRepositoryInfo nuGetRepositoryInfo = null;
 
             Task( "Check-Repository" )
                 .Does( () =>
                 {
-                    globalInfo = StandardCheckRepository( projectsToPublish, gitInfo );
+                    globalInfo = StandardCheckRepositoryWithoutNuget( gitInfo );
+                    nuGetRepositoryInfo = new NuGetRepositoryInfo( Cake, globalInfo, projectsToPublish );
+                    globalInfo.AddAndInitRepository( nuGetRepositoryInfo );
                     if( globalInfo.ShouldStop )
                     {
                         Cake.TerminateWithSuccess( "All packages from this commit are already available. Build skipped." );
@@ -79,7 +79,7 @@ namespace CodeCake
                 .IsDependentOn( "Clean" )
                 .Does( () =>
                  {
-                     StandardSolutionBuild( solutionFileName, gitInfo, globalInfo.BuildConfiguration );
+                     StandardSolutionBuild( solutionFileName, nuGetRepositoryInfo );
                  } );
 
             Task( "Unit-Testing" )
@@ -89,7 +89,7 @@ namespace CodeCake
                 .Does( () =>
                  {
                      var testProjects = projects.Where( p => p.Name.EndsWith( ".Tests" ) );
-                     StandardUnitTests( globalInfo, testProjects );
+                     StandardUnitTests( nuGetRepositoryInfo, testProjects );
                  } );
 
             Task( "Create-NuGet-Packages" )
@@ -97,7 +97,7 @@ namespace CodeCake
                 .IsDependentOn( "Unit-Testing" )
                 .Does( () =>
                  {
-                     StandardCreateNuGetPackages( releasesDir, projectsToPublish, gitInfo, globalInfo.BuildConfiguration );
+                     StandardCreateNuGetPackages( nuGetRepositoryInfo, releasesDir );
                  } );
 
             Task( "Push-NuGet-Packages" )
@@ -105,7 +105,7 @@ namespace CodeCake
                 .WithCriteria( () => gitInfo.IsValid )
                 .Does( () =>
                  {
-                     StandardPushNuGetPackages( globalInfo, releasesDir );
+                     StandardPushNuGetPackages( nuGetRepositoryInfo, releasesDir );
                  } );
 
 
