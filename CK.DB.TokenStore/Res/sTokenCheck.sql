@@ -1,0 +1,73 @@
+--SetupConfig: {}
+
+create procedure CK.sTokenCheck
+(
+     @ActorId int
+    ,@Token varchar(128)
+    ,@TokenId int output
+    ,@TokenKey nvarchar(255) output
+    ,@TokenScope varchar(63) output
+    ,@ExpirationDateUtc datetime2(2) output
+    ,@Active bit output
+    ,@LastCheckedDate datetime2(2) output
+    ,@ValidCheckedCount int output
+)
+as
+begin
+    set @TokenId = cast( parsename( @Token, 2 ) as int );
+    declare @TokenGuid uniqueidentifier = cast( parsename( @Token, 1 ) as uniqueidentifier );
+    declare @Now datetime2(2) = sysutcdatetime();
+
+    --[beginsp]
+
+    select
+         @ExpirationDateUtc = ExpirationDateUtc
+        ,@Active = Active
+        ,@TokenKey = TokenKey
+        ,@TokenScope = TokenScope
+        ,@LastCheckedDate = @Now
+        ,@ValidCheckedCount = ValidCheckedCount + 1
+    from
+        CK.tTokenStore
+    where
+            TokenId = @TokenId
+        and TokenGuid = @TokenGuid;
+
+    if @@rowcount = 0
+    begin
+        set @TokenId = 0;
+        set @ExpirationDateUtc = '0001-01-01';
+        set @Active = 0;
+        set @LastCheckedDate = '0001-01-01';
+        set @ValidCheckedCount = 0;
+
+        --<OnTokenMissing />
+    end
+    else if @ExpirationDateUtc < @Now
+    begin
+        declare @dummyStatement int = 0;
+
+        --<OnTokenExpired />
+    end
+    else
+
+    --<AdditionalSecurity />
+
+    begin
+        --<OnTokenChecked />
+        declare @SafeExpires datetime2(2) = dateadd(minute, 10, @Now);
+        if @ExpirationDateUtc < @SafeExpires
+        begin
+            set @ExpirationDateUtc = @SafeExpires;
+        end
+        update CK.tTokenStore set
+              ExpirationDateUtc = @ExpirationDateUtc
+             ,LastCheckedDate = @LastCheckedDate
+             ,ValidCheckedCount = @ValidCheckedCount
+        where
+                TokenId = @TokenId;
+    end
+
+    --[endsp]
+
+end
