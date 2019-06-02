@@ -5,10 +5,10 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CK.Text" Version="8.0.3--0032-develop" />
+    <PackageReference Include="CK.Text" Version="8.0.3" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SimpleGitVersion.Cake" Version="0.37.4--0022-develop" />
+    <PackageReference Include="SimpleGitVersion.Cake" Version="0.38.0" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NUnit.Runners.Net4" Version="2.6.4" />
