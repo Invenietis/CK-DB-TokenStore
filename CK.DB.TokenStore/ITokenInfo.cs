@@ -4,7 +4,7 @@ using CK.Core;
 namespace CK.DB.TokenStore
 {
     /// <summary>
-    /// Simple POCO which represents token informations.
+    /// Simple poco which represents token information.
     /// </summary>
     public interface ITokenInfo : IPoco
     {
@@ -22,16 +22,16 @@ namespace CK.DB.TokenStore
         string Token { get; }
 
         /// <summary>
-        /// The key of the token.
-        /// Only one token can exist by Key in a given <see cref="TokenScope"/>.
-        /// </summary>
-        string TokenKey { get; set; }
-
-        /// <summary>
         /// The scope of the token.
-        /// Only one token can exist by <see cref="TokenKey"/> in a given scope.
+        /// Functional area or token purpose. Scope + <see cref="TokenKey"/> is unique.
         /// </summary>
         string TokenScope { get; set; }
+
+        /// <summary>
+        /// The key of the token.
+        /// Key is unique in a given <see cref="TokenScope"/>.
+        /// </summary>
+        string TokenKey { get; set; }
 
         /// <summary>
         /// The expiration date. Must always be in the future.
