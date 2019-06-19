@@ -20,6 +20,8 @@ begin
 
     --[beginsp]
 
+    declare @IsValid bit = 1;
+
     select
          @ExpirationDateUtc = ExpirationDateUtc
         ,@Active = Active
@@ -35,6 +37,8 @@ begin
 
     if @@rowcount = 0
     begin
+        set @IsValid = 0;
+
         set @TokenId = 0;
         set @ExpirationDateUtc = '0001-01-01';
         set @Active = 0;
@@ -43,23 +47,26 @@ begin
 
         --<OnTokenMissing />
     end
-    else if @ExpirationDateUtc < @Now
+
+    if @IsValid = 1 and @ExpirationDateUtc < @Now
     begin
-        declare @dummyStatement int = 0;
+        set @IsValid = 0;
 
         --<OnTokenExpired />
     end
-    else
 
     --<AdditionalSecurity />
 
+    if @IsValid = 1
     begin
         --<OnTokenChecked />
         declare @SafeExpires datetime2(2) = dateadd(minute, 10, @Now);
+
         if @ExpirationDateUtc < @SafeExpires
         begin
             set @ExpirationDateUtc = @SafeExpires;
         end
+
         update CK.tTokenStore set
               ExpirationDateUtc = @ExpirationDateUtc
              ,LastCheckedDate = @LastCheckedDate
