@@ -11,7 +11,7 @@ namespace CK.DB.TokenStore
     /// The tTokenStore table contains tokens.
     /// </summary>
     [SqlTable( "tTokenStore", Package = typeof( Package ) ),
-     Versions( "1.0.0" )]
+     Versions( "1.0.0, 2.0.0" )]
     public abstract partial class TokenStoreTable : SqlTable
     {
         private IPocoFactory<ITokenInfo> _tokenFactory;
