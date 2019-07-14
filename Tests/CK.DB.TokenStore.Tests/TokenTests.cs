@@ -5,7 +5,6 @@ using CK.DB.TokenStore.Tests.Helpers;
 using CK.SqlServer;
 using FluentAssertions;
 using NUnit.Framework;
-
 using static CK.Testing.DBSetupTestHelper;
 
 namespace CK.DB.TokenStore.Tests
@@ -51,13 +50,17 @@ namespace CK.DB.TokenStore.Tests
             }
         }
 
-        [Test]
-        public void unexisting_token_does_not_check()
+        [TestCase( "3712.ff92d601-b556-4f33-80b5-08d5a2915bb0" )]
+        [TestCase( "wxcvbn.213e6220-3816-492c-830f-abeed5dd8c88" )]
+        [TestCase( "3712.azertyuiop" )]
+        [TestCase( "This is not.A valid token" )]
+        [TestCase( "qsdfghjklm" )]
+        [TestCase( null )]
+        public void invalid_or_missing_token_does_not_check( string token )
         {
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
-                var token = $"3712.{Guid.NewGuid().ToString()}";
                 var result = tokenStoreTable.Check( ctx, 1, token );
                 result.TokenId.Should().Be( 0 );
                 result.TokenScope.Should().BeNull();
@@ -66,19 +69,6 @@ namespace CK.DB.TokenStore.Tests
                 result.ExpirationDateUtc.Should().Be( Util.UtcMinValue );
                 result.LastCheckedDate.Should().Be( Util.UtcMinValue );
                 result.ValidCheckedCount.Should().Be( 0 );
-            }
-        }
-
-        [Test]
-        public void invalid_token_raises_an_exception()
-        {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
-            using( var ctx = new SqlStandardCallContext() )
-            {
-                const string token = "This is not.A valid token";
-                tokenStoreTable
-                    .Invoking( sut => sut.Check( ctx, 1, token ) )
-                    .Should().Throw<SqlDetailedException>();
             }
         }
 
@@ -125,7 +115,7 @@ namespace CK.DB.TokenStore.Tests
                 var result = await tokenStoreTable.CreateAsync( ctx, 1, info );
                 var expiration = DateTime.UtcNow + TimeSpan.FromMinutes( 15 );
                 result.Success.Should().BeTrue();
-                tokenStoreTable.Refresh( ctx, 1, result.TokenId, expiration);
+                tokenStoreTable.Refresh( ctx, 1, result.TokenId, expiration );
                 var startInfo = await tokenStoreTable.CheckAsync( ctx, 1, result.Token );
                 startInfo.ExpirationDateUtc.Should().BeCloseTo( expiration, TimeSpan.FromMilliseconds( 500 ) );
             }
@@ -142,8 +132,8 @@ namespace CK.DB.TokenStore.Tests
                 var expiration = DateTime.UtcNow - TimeSpan.FromMinutes( 1 );
                 result.Success.Should().BeTrue();
                 tokenStoreTable
-                    .Invoking( sut => sut.Refresh( ctx, 1, result.TokenId, expiration ) )
-                    .Should().Throw<SqlDetailedException>();
+                   .Invoking( sut => sut.Refresh( ctx, 1, result.TokenId, expiration ) )
+                   .Should().Throw<SqlDetailedException>();
             }
         }
 
