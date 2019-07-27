@@ -14,28 +14,43 @@ create procedure CK.sTokenCheck
 )
 as
 begin
-    set @TokenId = cast( parsename( @Token, 2 ) as int );
-    declare @TokenGuid uniqueidentifier = cast( parsename( @Token, 1 ) as uniqueidentifier );
     declare @Now datetime2(2) = sysutcdatetime();
 
     --[beginsp]
 
     declare @IsValid bit = 1;
+    declare @IsMissing bit = 0;
 
-    select
-         @ExpirationDateUtc = ExpirationDateUtc
-        ,@Active = Active
-        ,@TokenKey = TokenKey
-        ,@TokenScope = TokenScope
-        ,@LastCheckedDate = @Now
-        ,@ValidCheckedCount = ValidCheckedCount + 1
-    from
-        CK.tTokenStore
-    where
-            TokenId = @TokenId
-        and TokenGuid = @TokenGuid;
+    set @TokenId = try_cast( parsename( @Token, 2 ) as int );
+    declare @TokenGuid uniqueidentifier = try_cast( parsename( @Token, 1 ) as uniqueidentifier );
 
-    if @@rowcount = 0
+    if @TokenId is null or @TokenGuid is null
+    begin
+        set @IsMissing = 1;
+    end
+
+    if @IsMissing = 0
+    begin
+        select
+             @ExpirationDateUtc = ExpirationDateUtc
+            ,@Active = Active
+            ,@TokenKey = TokenKey
+            ,@TokenScope = TokenScope
+            ,@LastCheckedDate = @Now
+            ,@ValidCheckedCount = ValidCheckedCount + 1
+        from
+            CK.tTokenStore
+        where
+                TokenId = @TokenId
+            and TokenGuid = @TokenGuid;
+
+        if @@rowcount = 0
+        begin
+            set @IsMissing = 1;
+        end
+    end
+
+    if @IsMissing = 1
     begin
         set @IsValid = 0;
 
