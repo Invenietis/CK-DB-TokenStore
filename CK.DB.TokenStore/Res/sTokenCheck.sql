@@ -14,27 +14,46 @@ create procedure CK.sTokenCheck
 )
 as
 begin
-    set @TokenId = cast( parsename( @Token, 2 ) as int );
-    declare @TokenGuid uniqueidentifier = cast( parsename( @Token, 1 ) as uniqueidentifier );
     declare @Now datetime2(2) = sysutcdatetime();
 
     --[beginsp]
 
-    select
-         @ExpirationDateUtc = ExpirationDateUtc
-        ,@Active = Active
-        ,@TokenKey = TokenKey
-        ,@TokenScope = TokenScope
-        ,@LastCheckedDate = @Now
-        ,@ValidCheckedCount = ValidCheckedCount + 1
-    from
-        CK.tTokenStore
-    where
-            TokenId = @TokenId
-        and TokenGuid = @TokenGuid;
+    declare @IsValid bit = 1;
+    declare @IsMissing bit = 0;
 
-    if @@rowcount = 0
+    set @TokenId = try_cast( parsename( @Token, 2 ) as int );
+    declare @TokenGuid uniqueidentifier = try_cast( parsename( @Token, 1 ) as uniqueidentifier );
+
+    if @TokenId is null or @TokenGuid is null
     begin
+        set @IsMissing = 1;
+    end
+
+    if @IsMissing = 0
+    begin
+        select
+             @ExpirationDateUtc = ExpirationDateUtc
+            ,@Active = Active
+            ,@TokenKey = TokenKey
+            ,@TokenScope = TokenScope
+            ,@LastCheckedDate = @Now
+            ,@ValidCheckedCount = ValidCheckedCount + 1
+        from
+            CK.tTokenStore
+        where
+                TokenId = @TokenId
+            and TokenGuid = @TokenGuid;
+
+        if @@rowcount = 0
+        begin
+            set @IsMissing = 1;
+        end
+    end
+
+    if @IsMissing = 1
+    begin
+        set @IsValid = 0;
+
         set @TokenId = 0;
         set @ExpirationDateUtc = '0001-01-01';
         set @Active = 0;
@@ -43,23 +62,26 @@ begin
 
         --<OnTokenMissing />
     end
-    else if @ExpirationDateUtc < @Now
+
+    if @IsValid = 1 and @ExpirationDateUtc < @Now
     begin
-        declare @dummyStatement int = 0;
+        set @IsValid = 0;
 
         --<OnTokenExpired />
     end
-    else
 
     --<AdditionalSecurity />
 
+    if @IsValid = 1
     begin
         --<OnTokenChecked />
         declare @SafeExpires datetime2(2) = dateadd(minute, 10, @Now);
+
         if @ExpirationDateUtc < @SafeExpires
         begin
             set @ExpirationDateUtc = @SafeExpires;
         end
+
         update CK.tTokenStore set
               ExpirationDateUtc = @ExpirationDateUtc
              ,LastCheckedDate = @LastCheckedDate
