@@ -1,6 +1,6 @@
 using System;
 using CK.SqlServer;
-using CK.SqlServer.Setup;
+using CK.Core;
 
 namespace CK.DB.TokenStore
 {

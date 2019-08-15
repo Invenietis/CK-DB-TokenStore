@@ -1,9 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using CK.Core;
-using CK.Setup;
 using CK.SqlServer;
-using CK.SqlServer.Setup;
 
 namespace CK.DB.TokenStore
 {
