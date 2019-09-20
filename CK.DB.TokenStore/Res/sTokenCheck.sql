@@ -4,6 +4,7 @@ create procedure CK.sTokenCheck
 (
      @ActorId int
     ,@Token varchar(128)
+    ,@CreatedById int output
     ,@TokenId int output
     ,@TokenKey nvarchar(255) output
     ,@TokenScope varchar(63) output
@@ -32,7 +33,8 @@ begin
     if @IsMissing = 0
     begin
         select
-             @ExpirationDateUtc = ExpirationDateUtc
+             @CreatedById = CreatedById
+            ,@ExpirationDateUtc = ExpirationDateUtc
             ,@Active = Active
             ,@TokenKey = TokenKey
             ,@TokenScope = TokenScope
@@ -53,7 +55,7 @@ begin
     if @IsMissing = 1
     begin
         set @IsValid = 0;
-
+        set @CreatedById = 0;
         set @TokenId = 0;
         set @ExpirationDateUtc = '0001-01-01';
         set @Active = 0;

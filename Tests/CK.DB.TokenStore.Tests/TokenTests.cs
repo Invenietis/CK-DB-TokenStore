@@ -63,6 +63,7 @@ namespace CK.DB.TokenStore.Tests
             {
                 var result = tokenStoreTable.Check( ctx, 1, token );
                 result.TokenId.Should().Be( 0 );
+                result.CreatedById.Should().Be( 0 );
                 result.TokenScope.Should().BeNull();
                 result.TokenKey.Should().BeNull();
                 result.Token.Should().Be( token );
