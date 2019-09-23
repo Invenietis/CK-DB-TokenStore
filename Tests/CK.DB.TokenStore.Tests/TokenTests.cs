@@ -152,5 +152,41 @@ namespace CK.DB.TokenStore.Tests
                 startInfo.IsValid().Should().BeFalse();
             }
         }
+
+        [Test]
+        public async Task add_safe_time_superior_to_expiration_should_change()
+        {
+            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            using( var ctx = new SqlStandardCallContext() )
+            {
+                var dateOriginExpirationToken = DateTime.UtcNow.AddSeconds( 10 );
+                var info = tokenStoreTable.GenerateInvitationInfo( dateOriginExpirationToken );
+                var result = await tokenStoreTable.CreateAsync( ctx, 1, info );
+                result.Success.Should().BeTrue();
+
+                var startInfo = await tokenStoreTable.CheckAsync( ctx, 1, result.Token,60);
+                startInfo.IsValid().Should().BeTrue();
+
+                startInfo.ExpirationDateUtc.Should().NotBe( dateOriginExpirationToken );
+            }
+        }
+
+        [Test]
+        public async Task add_safe_time_inferior_to_expiration_should_not_change()
+        {
+            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            using( var ctx = new SqlStandardCallContext() )
+            {
+                var dateOriginExpirationToken = DateTime.UtcNow.AddSeconds( 60 );
+                var info = tokenStoreTable.GenerateInvitationInfo( dateOriginExpirationToken );
+                var result = await tokenStoreTable.CreateAsync( ctx, 1, info );
+                result.Success.Should().BeTrue();
+
+                var startInfo = await tokenStoreTable.CheckAsync( ctx, 1, result.Token, 10 );
+                startInfo.IsValid().Should().BeTrue();
+
+                startInfo.ExpirationDateUtc.Should().BeCloseTo( dateOriginExpirationToken,2);
+            }
+        }
     }
 }
