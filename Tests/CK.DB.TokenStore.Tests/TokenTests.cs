@@ -185,7 +185,7 @@ namespace CK.DB.TokenStore.Tests
                 var startInfo = await tokenStoreTable.CheckAsync( ctx, 1, result.Token, 10 );
                 startInfo.IsValid().Should().BeTrue();
 
-                startInfo.ExpirationDateUtc.Should().BeCloseTo( dateOriginExpirationToken,2);
+                startInfo.ExpirationDateUtc.Should().BeCloseTo( dateOriginExpirationToken,100);
             }
         }
     }
