@@ -1,9 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using CK.Core;
-using CK.Setup;
 using CK.SqlServer;
-using CK.SqlServer.Setup;
 
 namespace CK.DB.TokenStore
 {
@@ -15,7 +13,6 @@ namespace CK.DB.TokenStore
     public abstract partial class TokenStoreTable : SqlTable
     {
         private IPocoFactory<ITokenInfo> _tokenFactory;
-
         internal void StObjConstruct( IPocoFactory<ITokenInfo> tokenFactory )
         {
             _tokenFactory = tokenFactory;
@@ -112,6 +109,20 @@ namespace CK.DB.TokenStore
         /// <returns>The <see cref="ITokenInfo"/>.</returns>
         [SqlProcedure( "sTokenCheck" )]
         public abstract Task<ITokenInfo> CheckAsync( ISqlCallContext ctx, int actorId, string token );
+
+        /// <summary>
+        /// Checks whether a token is valid or not.
+        /// If valid, <see cref="ITokenInfo.ValidCheckedCount"/> and <see cref="ITokenInfo.LastCheckedDate"/> will be updated.
+        /// If not valid, <see cref="ITokenInfo.TokenId"/> will be zero and
+        /// <see cref="ITokenInfo.ExpirationDateUtc"/> will be <see cref="Core.Util.UtcMinValue"/>.
+        /// </summary>
+        /// <param name="ctx">The call context to use.</param>
+        /// <param name="actorId">The current actor identifier.</param>
+        /// <param name="token">The token identifier.</param>
+        /// <param name="safeTimeSeconds">Time security: applies only if the token is about to expire.</param>
+        /// <returns>The <see cref="ITokenInfo"/>.</returns>
+        [SqlProcedure( "sTokenCheck" )]
+        public abstract Task<ITokenInfo> CheckAsync( ISqlCallContext ctx, int actorId, string token, int safeTimeSeconds );
 
         /// <summary>
         /// Destroys an existing token.

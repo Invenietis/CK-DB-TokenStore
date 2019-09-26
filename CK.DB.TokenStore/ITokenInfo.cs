@@ -14,6 +14,12 @@ namespace CK.DB.TokenStore
         /// </summary>
         int TokenId { get; }
 
+        // <summary>
+        /// Gets the actorId who created the token.
+        /// This property can only be read from the database.
+        /// </summary>
+        int CreatedById { get; }
+
         /// <summary>
         /// Gets the token to use.
         /// This token combines the TokenId and the TokenGUID.
