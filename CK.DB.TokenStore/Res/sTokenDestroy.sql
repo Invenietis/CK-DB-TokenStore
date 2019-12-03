@@ -1,9 +1,9 @@
 -- SetupConfig: {}
-
+--
 create procedure CK.sTokenDestroy
 (
-     @ActorId int
-    ,@TokenId int
+     @ActorId int,
+     @TokenId int
 )
 as
 begin

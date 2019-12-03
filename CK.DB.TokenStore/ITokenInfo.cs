@@ -40,6 +40,11 @@ namespace CK.DB.TokenStore
         string TokenKey { get; set; }
 
         /// <summary>
+        /// Gets or sets any external data that supports the process associated to this token.
+        /// </summary>
+        byte[] ExtraData { get; set; }
+
+        /// <summary>
         /// The expiration date. Must always be in the future.
         /// </summary>
         DateTime ExpirationDateUtc { get; set; }
