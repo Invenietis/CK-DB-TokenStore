@@ -1,8 +1,10 @@
 -- SetupConfig: {}
 --
--- Creates a now token for an unique (@TokenKey, @TokenInfo):
--- if the couple (@TokenKey, @TokenInfo) already exists,
+-- Creates a new token for an unique (@TokenKey, @TokenScope):
+-- if the couple (@TokenKey, @TokenScope) already exists,
 -- the zero @TokenIdResult is returned with an empty @TokenResult.
+--
+-- The @ExpirationDateUtc must be not null AND in the future otherwise an exception is raised.
 --
 create procedure CK.sTokenCreate
 (

@@ -103,6 +103,8 @@ namespace CK.DB.TokenStore
         /// If valid, <see cref="ITokenInfo.ValidCheckedCount"/> and <see cref="ITokenInfo.LastCheckedDate"/> will be updated.
         /// If not valid, <see cref="ITokenInfo.TokenId"/> will be zero and
         /// <see cref="ITokenInfo.ExpirationDateUtc"/> will be <see cref="Core.Util.UtcMinValue"/>.
+        /// By default, this uses a safe period of 600 seconds (10 minutes): whenever this check is successful, the expiration date
+        /// is guaranteed to be at least in 10 minutes (it is postponed as required).
         /// </summary>
         /// <param name="ctx">The call context to use.</param>
         /// <param name="actorId">The current actor identifier.</param>
@@ -120,7 +122,9 @@ namespace CK.DB.TokenStore
         /// <param name="ctx">The call context to use.</param>
         /// <param name="actorId">The current actor identifier.</param>
         /// <param name="token">The token identifier.</param>
-        /// <param name="safeTimeSeconds">Time security: applies only if the token is about to expire.</param>
+        /// <param name="safeTimeSeconds">Time security: applies only if the token is about to expire. The expiration date
+        /// is guaranteed to be at least in the given number of seconds (it is postponed as required).
+        /// </param>
         /// <returns>The <see cref="ITokenInfo"/>.</returns>
         [SqlProcedure( "sTokenCheck" )]
         public abstract Task<ITokenInfo> CheckAsync( ISqlCallContext ctx, int actorId, string token, int safeTimeSeconds );
