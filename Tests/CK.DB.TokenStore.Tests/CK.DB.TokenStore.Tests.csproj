@@ -1,17 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\Common\Shared.props" />
   <PropertyGroup>
-    <TargetFrameworks>net461;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
     <LangVersion>7.3</LangVersion>
     <Description>This package contains tests for CK.DB.TokenStore (uses CK.DB.Tests.NUnit).</Description>
     <IsPackable>True</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CK.DB.Tests.NUnit" Version="12.0.1" />
-    <PackageReference Include="FluentAssertions" Version="5.9.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
+    <PackageReference Include="CK.DB.Tests.NUnit" Version="13.0.0" />
+    <PackageReference Include="FluentAssertions" Version="5.10.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
     <PackageReference Include="NUnit" Version="3.12.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.15.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\CK.DB.TokenStore\CK.DB.TokenStore.csproj" />
