@@ -1,18 +1,21 @@
---SetupConfig: {}
+-- SetupConfig: {}
 --
--- Creates a now token for an unique (@TokenKey, @TokenInfo):
--- if the couple (@TokenKey, @TokenInfo) already exists,
+-- Creates a new token for an unique (@TokenKey, @TokenScope):
+-- if the couple (@TokenKey, @TokenScope) already exists,
 -- the zero @TokenIdResult is returned with an empty @TokenResult.
+--
+-- The @ExpirationDateUtc must be not null AND in the future otherwise an exception is raised.
 --
 create procedure CK.sTokenCreate
 (
-     @ActorId int
-    ,@TokenKey nvarchar(255)
-    ,@TokenScope varchar(63)
-    ,@ExpirationDateUtc datetime2(2)
-    ,@Active bit
-    ,@TokenIdResult int output
-    ,@TokenResult varchar(128) output
+     @ActorId int,
+     @TokenKey nvarchar(255),
+     @TokenScope varchar(63),
+     @ExpirationDateUtc datetime2(2),
+     @Active bit,
+     @ExtraData varbinary(max),
+     @TokenIdResult int output,
+     @TokenResult varchar(128) output
 )
 as
 begin
@@ -27,8 +30,8 @@ begin
 
         --<PreCreate revert />
 
-        insert into CK.tTokenStore( CreatedById, TokenKey, TokenScope, ExpirationDateUtc, Active )
-            values( @ActorId, @TokenKey, @TokenScope, @ExpirationDateUtc, @Active );
+        insert into CK.tTokenStore( CreatedById, TokenKey, TokenScope, ExpirationDateUtc, Active, ExtraData )
+            values( @ActorId, @TokenKey, @TokenScope, @ExpirationDateUtc, @Active, @ExtraData );
 
         set @TokenIdResult = SCOPE_IDENTITY();
         select @TokenResult = Token from CK.tTokenStore where TokenId = @TokenIdResult;

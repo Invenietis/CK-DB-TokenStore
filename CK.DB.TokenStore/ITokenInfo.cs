@@ -14,6 +14,12 @@ namespace CK.DB.TokenStore
         /// </summary>
         int TokenId { get; }
 
+        // <summary>
+        /// Gets the actorId who created the token.
+        /// This property can only be read from the database.
+        /// </summary>
+        int CreatedById { get; }
+
         /// <summary>
         /// Gets the token to use.
         /// This token combines the TokenId and the TokenGUID.
@@ -32,6 +38,11 @@ namespace CK.DB.TokenStore
         /// Key is unique in a given <see cref="TokenScope"/>.
         /// </summary>
         string TokenKey { get; set; }
+
+        /// <summary>
+        /// Gets or sets any external data that supports the process associated to this token.
+        /// </summary>
+        byte[] ExtraData { get; set; }
 
         /// <summary>
         /// The expiration date. Must always be in the future.

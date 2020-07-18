@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CK.Core;
 using CK.DB.TokenStore.Tests.Helpers;
@@ -16,20 +17,43 @@ namespace CK.DB.TokenStore.Tests
         public void create_and_destroy()
         {
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
-
             using( var ctx = new SqlStandardCallContext( TestHelper.Monitor ) )
             {
-                var info = tokenStoreTable.GenerateInvitationInfo();
+                var info = tokenStoreTable.GenerateTestInvitationInfo();
                 var createResult = tokenStoreTable.Create( ctx, 1, info );
                 createResult.Success.Should().BeTrue();
                 createResult.TokenId.Should().BeGreaterThan( 0 );
                 createResult.Token.Should().NotBeEmpty();
+
                 var checkResult = tokenStoreTable.Check( ctx, 1, createResult.Token );
                 checkResult.IsValid().Should().BeTrue();
                 checkResult.TokenId.Should().Be( createResult.TokenId );
                 checkResult.LastCheckedDate.Should().BeCloseTo( DateTime.UtcNow, TimeSpan.FromMilliseconds( 500 ) );
                 checkResult.ValidCheckedCount.Should().Be( 1 );
+
                 tokenStoreTable.Destroy( ctx, 1, createResult.TokenId );
+            }
+        }
+
+        [Test]
+        public async Task create_and_destroy_async()
+        {
+            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            using( var ctx = new SqlStandardCallContext( TestHelper.Monitor ) )
+            {
+                var info = tokenStoreTable.GenerateTestInvitationInfo();
+                var createResult = await tokenStoreTable.CreateAsync( ctx, 1, info );
+                createResult.Success.Should().BeTrue();
+                createResult.TokenId.Should().BeGreaterThan( 0 );
+                createResult.Token.Should().NotBeEmpty();
+
+                var checkResult = await tokenStoreTable.CheckAsync( ctx, 1, createResult.Token );
+                checkResult.IsValid().Should().BeTrue();
+                checkResult.TokenId.Should().Be( createResult.TokenId );
+                checkResult.LastCheckedDate.Should().BeCloseTo( DateTime.UtcNow, TimeSpan.FromMilliseconds( 500 ) );
+                checkResult.ValidCheckedCount.Should().Be( 1 );
+
+                await tokenStoreTable.DestroyAsync( ctx, 1, createResult.TokenId );
             }
         }
 
@@ -39,7 +63,7 @@ namespace CK.DB.TokenStore.Tests
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
-                var info = tokenStoreTable.GenerateInvitationInfo();
+                var info = tokenStoreTable.GenerateTestInvitationInfo();
                 var result1 = tokenStoreTable.Create( ctx, 1, info );
                 result1.Success.Should().BeTrue();
                 var result2 = tokenStoreTable.Create( ctx, 1, info );
@@ -63,6 +87,7 @@ namespace CK.DB.TokenStore.Tests
             {
                 var result = tokenStoreTable.Check( ctx, 1, token );
                 result.TokenId.Should().Be( 0 );
+                result.CreatedById.Should().Be( 0 );
                 result.TokenScope.Should().BeNull();
                 result.TokenKey.Should().BeNull();
                 result.Token.Should().Be( token );
@@ -78,7 +103,7 @@ namespace CK.DB.TokenStore.Tests
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
-                var info = tokenStoreTable.GenerateInvitationInfo( DateTime.UtcNow.AddMinutes( 2 ) );
+                var info = tokenStoreTable.GenerateTestInvitationInfo( DateTime.UtcNow.AddMinutes( 2 ) );
                 var result = tokenStoreTable.Create( ctx, 1, info );
                 result.Success.Should().BeTrue();
 
@@ -90,12 +115,28 @@ namespace CK.DB.TokenStore.Tests
         }
 
         [Test]
-        public async Task token_expiration()
+        public void token_expiration()
         {
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
-                var info = tokenStoreTable.GenerateInvitationInfo( DateTime.UtcNow.AddMilliseconds( 500 ) );
+                var info = tokenStoreTable.GenerateTestInvitationInfo( DateTime.UtcNow.AddMilliseconds( 500 ) );
+                var result = tokenStoreTable.Create( ctx, 1, info );
+                result.Success.Should().BeTrue();
+
+                Thread.Sleep( 550 );
+                var startInfo = tokenStoreTable.Check( ctx, 1, result.Token );
+                startInfo.IsValid().Should().BeFalse();
+            }
+        }
+
+        [Test]
+        public async Task token_expiration_async()
+        {
+            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            using( var ctx = new SqlStandardCallContext() )
+            {
+                var info = tokenStoreTable.GenerateTestInvitationInfo( DateTime.UtcNow.AddMilliseconds( 500 ) );
                 var result = await tokenStoreTable.CreateAsync( ctx, 1, info );
                 result.Success.Should().BeTrue();
 
@@ -106,33 +147,52 @@ namespace CK.DB.TokenStore.Tests
         }
 
         [Test]
-        public async Task token_expiration_refresh()
+        public async Task token_expiration_and_ExtraData_set()
         {
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
-                var info = tokenStoreTable.GenerateInvitationInfo();
+                var info = tokenStoreTable.GenerateTestInvitationInfo();
                 var result = await tokenStoreTable.CreateAsync( ctx, 1, info );
                 var expiration = DateTime.UtcNow + TimeSpan.FromMinutes( 15 );
                 result.Success.Should().BeTrue();
-                tokenStoreTable.Refresh( ctx, 1, result.TokenId, expiration );
+                await tokenStoreTable.ActivateAsync( ctx, 1, result.TokenId, null, expiration );
                 var startInfo = await tokenStoreTable.CheckAsync( ctx, 1, result.Token );
                 startInfo.ExpirationDateUtc.Should().BeCloseTo( expiration, TimeSpan.FromMilliseconds( 500 ) );
+
+                await tokenStoreTable.SetExtraDataAsync( ctx, 1, result.TokenId, new byte[] { 0, 1, 2 } );
+                info = await tokenStoreTable.CheckAsync( ctx, 1, result.Token );
+
+                info.Should().BeEquivalentTo( startInfo, o => o.Excluding( i => i.ExtraData )
+                                                               .Excluding( i => i.LastCheckedDate )
+                                                               .Excluding( i => i.ValidCheckedCount ) );
+                info.ExtraData.Should().BeEquivalentTo( new byte[] { 0, 1, 2 }, o => o.WithStrictOrdering() );
+                info.ValidCheckedCount.Should().Be( startInfo.ValidCheckedCount + 1 );
+                info.LastCheckedDate.Should().BeOnOrAfter( startInfo.LastCheckedDate );
+
+                await tokenStoreTable.SetExtraDataAsync( ctx, 1, result.TokenId, null );
+                info = await tokenStoreTable.CheckAsync( ctx, 1, result.Token );
+
+                info.Should().BeEquivalentTo( startInfo, o => o.Excluding( i => i.LastCheckedDate )
+                                                               .Excluding( i => i.ValidCheckedCount ) );
+                info.ExtraData.Should().BeNull();
+                info.ValidCheckedCount.Should().Be( startInfo.ValidCheckedCount + 2 );
+                info.LastCheckedDate.Should().BeOnOrAfter( startInfo.LastCheckedDate );
             }
         }
 
         [Test]
-        public async Task invalid_refresh_raises_an_exception()
+        public async Task invalid_set_expiration_date_raises_an_exception()
         {
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
-                var info = tokenStoreTable.GenerateInvitationInfo();
+                var info = tokenStoreTable.GenerateTestInvitationInfo();
                 var result = await tokenStoreTable.CreateAsync( ctx, 1, info );
                 var expiration = DateTime.UtcNow - TimeSpan.FromMinutes( 1 );
                 result.Success.Should().BeTrue();
                 tokenStoreTable
-                   .Invoking( sut => sut.Refresh( ctx, 1, result.TokenId, expiration ) )
+                   .Awaiting( sut => sut.ActivateAsync( ctx, 1, result.TokenId, null, expiration ) )
                    .Should().Throw<SqlDetailedException>();
             }
         }
@@ -143,12 +203,48 @@ namespace CK.DB.TokenStore.Tests
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
-                var info = tokenStoreTable.GenerateInvitationInfo();
+                var info = tokenStoreTable.GenerateTestInvitationInfo();
                 var result = await tokenStoreTable.CreateAsync( ctx, 1, info );
                 result.Success.Should().BeTrue();
-                tokenStoreTable.Activate( ctx, 1, result.TokenId, false );
+                await tokenStoreTable.ActivateAsync( ctx, 1, result.TokenId, false );
                 var startInfo = await tokenStoreTable.CheckAsync( ctx, 1, result.Token );
                 startInfo.IsValid().Should().BeFalse();
+            }
+        }
+
+        [Test]
+        public async Task add_safe_time_superior_to_expiration_should_change()
+        {
+            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            using( var ctx = new SqlStandardCallContext() )
+            {
+                var dateOriginExpirationToken = DateTime.UtcNow.AddSeconds( 10 );
+                var info = tokenStoreTable.GenerateTestInvitationInfo( dateOriginExpirationToken );
+                var result = await tokenStoreTable.CreateAsync( ctx, 1, info );
+                result.Success.Should().BeTrue();
+
+                var startInfo = await tokenStoreTable.CheckAsync( ctx, 1, result.Token,60);
+                startInfo.IsValid().Should().BeTrue();
+
+                startInfo.ExpirationDateUtc.Should().NotBe( dateOriginExpirationToken );
+            }
+        }
+
+        [Test]
+        public async Task add_safe_time_inferior_to_expiration_should_not_change()
+        {
+            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            using( var ctx = new SqlStandardCallContext() )
+            {
+                var dateOriginExpirationToken = DateTime.UtcNow.AddSeconds( 60 );
+                var info = tokenStoreTable.GenerateTestInvitationInfo( dateOriginExpirationToken );
+                var result = await tokenStoreTable.CreateAsync( ctx, 1, info );
+                result.Success.Should().BeTrue();
+
+                var startInfo = await tokenStoreTable.CheckAsync( ctx, 1, result.Token, 10 );
+                startInfo.IsValid().Should().BeTrue();
+
+                startInfo.ExpirationDateUtc.Should().BeCloseTo( dateOriginExpirationToken,100);
             }
         }
     }

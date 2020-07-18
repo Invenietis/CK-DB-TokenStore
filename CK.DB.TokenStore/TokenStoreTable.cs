@@ -9,11 +9,10 @@ namespace CK.DB.TokenStore
     /// The tTokenStore table contains tokens.
     /// </summary>
     [SqlTable( "tTokenStore", Package = typeof( Package ) ),
-     Versions( "1.0.0, 2.0.0" )]
+     Versions( "1.0.0, 2.0.0, 3.0.0" )]
     public abstract partial class TokenStoreTable : SqlTable
     {
         private IPocoFactory<ITokenInfo> _tokenFactory;
-
         internal void StObjConstruct( IPocoFactory<ITokenInfo> tokenFactory )
         {
             _tokenFactory = tokenFactory;
@@ -77,26 +76,42 @@ namespace CK.DB.TokenStore
         public abstract Task<CreateResult> CreateAsync( ISqlCallContext ctx, int actorId, [ParameterSource] ITokenInfo info );
 
         /// <summary>
-        /// Refreshes the token expiration date.
+        /// Sets any extra data associated to this token. This data typically supports the process associated to this token.
         /// </summary>
         /// <param name="ctx">The call context to use.</param>
         /// <param name="actorId">The current actor identifier.</param>
-        /// <param name="tokenId">The token identifier to refresh.</param>
-        /// <param name="expirationDateUtc">The new expiration date. Must be in the future.</param>
+        /// <param name="tokenId">The token identifier to configure.</param>
+        /// <param name="extraData">The date. Can be null.</param>
         /// <returns>The awaitable.</returns>
-        [SqlProcedure( "sTokenRefresh" )]
-        public abstract Task RefreshAsync( ISqlCallContext ctx, int actorId, int tokenId, DateTime expirationDateUtc );
+        [SqlProcedure( "sTokenExtraDataSet" )]
+        public abstract Task SetExtraDataAsync( ISqlCallContext ctx, int actorId, int tokenId, byte[] extraData );
 
         /// <summary>
-        /// Updates the token activity.
+        /// Updates the token activity state and/or expiration date.
         /// </summary>
         /// <param name="ctx">The call context to use.</param>
         /// <param name="actorId">The current actor identifier.</param>
         /// <param name="tokenId">The token identifier to activate.</param>
-        /// <param name="active">The new activity state. <c>false</c> will deactivate the token.</param>
+        /// <param name="active">When not null, this is the new activity state. <c>false</c> will deactivate the token.</param>
+        /// <param name="expirationDateUtc">When not null, this new expiration date must be in the future otherwise an exception is thrown.</param>
         /// <returns>The awaitable.</returns>
         [SqlProcedure( "sTokenActivate" )]
-        public abstract Task ActivateAsync( ISqlCallContext ctx, int actorId, int tokenId, bool active );
+        public abstract Task ActivateAsync( ISqlCallContext ctx, int actorId, int tokenId, bool? active = null, DateTime? expirationDateUtc = null );
+
+        /// <summary>
+        /// Checks whether a token is valid or not.
+        /// If valid, <see cref="ITokenInfo.ValidCheckedCount"/> and <see cref="ITokenInfo.LastCheckedDate"/> will be updated.
+        /// If not valid, <see cref="ITokenInfo.TokenId"/> will be zero and
+        /// <see cref="ITokenInfo.ExpirationDateUtc"/> will be <see cref="Core.Util.UtcMinValue"/>.
+        /// By default, this uses a safe period of 600 seconds (10 minutes): whenever this check is successful, the expiration date
+        /// is guaranteed to be at least in 10 minutes (it is postponed as required).
+        /// </summary>
+        /// <param name="ctx">The call context to use.</param>
+        /// <param name="actorId">The current actor identifier.</param>
+        /// <param name="token">The token identifier.</param>
+        /// <returns>The <see cref="ITokenInfo"/>.</returns>
+        [SqlProcedure( "sTokenCheck" )]
+        public abstract Task<ITokenInfo> CheckAsync( ISqlCallContext ctx, int actorId, string token );
 
         /// <summary>
         /// Checks whether a token is valid or not.
@@ -107,9 +122,12 @@ namespace CK.DB.TokenStore
         /// <param name="ctx">The call context to use.</param>
         /// <param name="actorId">The current actor identifier.</param>
         /// <param name="token">The token identifier.</param>
+        /// <param name="safeTimeSeconds">Time security: applies only if the token is about to expire. The expiration date
+        /// is guaranteed to be at least in the given number of seconds (it is postponed as required).
+        /// </param>
         /// <returns>The <see cref="ITokenInfo"/>.</returns>
         [SqlProcedure( "sTokenCheck" )]
-        public abstract Task<ITokenInfo> CheckAsync( ISqlCallContext ctx, int actorId, string token );
+        public abstract Task<ITokenInfo> CheckAsync( ISqlCallContext ctx, int actorId, string token, int safeTimeSeconds );
 
         /// <summary>
         /// Destroys an existing token.
