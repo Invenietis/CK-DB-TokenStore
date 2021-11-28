@@ -10,22 +10,22 @@ namespace CK.DB.TokenStore
     {
         /// <summary>
         /// Gets the token identifier.
-        /// This property can only be read from the database.
+        /// This property should only be read from the database.
         /// </summary>
-        int TokenId { get; }
+        int TokenId { get; set; }
 
         // <summary>
         /// Gets the actorId who created the token.
-        /// This property can only be read from the database.
+        /// This property should only be read from the database.
         /// </summary>
-        int CreatedById { get; }
+        int CreatedById { get; set; }
 
         /// <summary>
         /// Gets the token to use.
         /// This token combines the TokenId and the TokenGUID.
-        /// This property can only be read from the database.
+        /// This property should only be read from the database.
         /// </summary>
-        string Token { get; }
+        string Token { get; set; }
 
         /// <summary>
         /// The scope of the token.
@@ -59,14 +59,14 @@ namespace CK.DB.TokenStore
         /// <summary>
         /// Gets the last time (Utc) this token has been successfully checked.
         /// Defaults to <see cref="Util.UtcMinValue"/>.
-        /// This property can only be read from the database.
+        /// This property should only be read from the database.
         /// </summary>
-        DateTime LastCheckedDate { get; }
+        DateTime LastCheckedDate { get; set; }
 
         /// <summary>
         /// Gets the number of valid check so far.
-        /// This property can only be read from the database.
+        /// This property should only be read from the database.
         /// </summary>
-        int ValidCheckedCount { get; }
+        int ValidCheckedCount { get; set; }
     }
 }
