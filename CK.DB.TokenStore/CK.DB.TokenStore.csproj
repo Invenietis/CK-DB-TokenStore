@@ -4,7 +4,7 @@
     <Description>This package implements CK.tTokenStore table.</Description>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CK.DB.Actor" Version="14.0.0-r09-00-0008-develop" />
+    <PackageReference Include="CK.DB.Actor" Version="14.0.0-r09-00-0009-develop" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="**\*.sql;**\*.tql;**\*.y4" Exclude="bin\**;obj\**;CodeCakeBuilder\**;packages\**;@(EmbeddedResource)" />
