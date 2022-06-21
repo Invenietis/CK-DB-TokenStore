@@ -36,7 +36,7 @@ namespace CK.DB.TokenStore.Tests
         }
 
         [Test]
-        public async Task create_and_destroy_async()
+        public async Task create_and_destroy_Async()
         {
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext( TestHelper.Monitor ) )
@@ -131,7 +131,7 @@ namespace CK.DB.TokenStore.Tests
         }
 
         [Test]
-        public async Task token_expiration_async()
+        public async Task token_expiration_Async()
         {
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
@@ -147,7 +147,7 @@ namespace CK.DB.TokenStore.Tests
         }
 
         [Test]
-        public async Task token_expiration_and_ExtraData_set()
+        public async Task token_expiration_and_ExtraData_set_Async()
         {
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
@@ -182,7 +182,7 @@ namespace CK.DB.TokenStore.Tests
         }
 
         [Test]
-        public async Task invalid_set_expiration_date_raises_an_exception()
+        public async Task invalid_set_expiration_date_raises_an_exception_Async()
         {
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
@@ -191,14 +191,14 @@ namespace CK.DB.TokenStore.Tests
                 var result = await tokenStoreTable.CreateAsync( ctx, 1, info );
                 var expiration = DateTime.UtcNow - TimeSpan.FromMinutes( 1 );
                 result.Success.Should().BeTrue();
-                tokenStoreTable
-                   .Awaiting( sut => sut.ActivateAsync( ctx, 1, result.TokenId, null, expiration ) )
-                   .Should().Throw<SqlDetailedException>();
+                await tokenStoreTable
+                           .Awaiting( sut => sut.ActivateAsync( ctx, 1, result.TokenId, null, expiration ) )
+                           .Should().ThrowAsync<SqlDetailedException>();
             }
         }
 
         [Test]
-        public async Task token_inactive()
+        public async Task token_inactive_Async()
         {
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
@@ -231,7 +231,7 @@ namespace CK.DB.TokenStore.Tests
         }
 
         [Test]
-        public async Task add_safe_time_inferior_to_expiration_should_not_change()
+        public async Task add_safe_time_inferior_to_expiration_should_not_change_Async()
         {
             var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
@@ -244,7 +244,7 @@ namespace CK.DB.TokenStore.Tests
                 var startInfo = await tokenStoreTable.CheckAsync( ctx, 1, result.Token, 10 );
                 startInfo.IsValid().Should().BeTrue();
 
-                startInfo.ExpirationDateUtc.Should().BeCloseTo( dateOriginExpirationToken,100);
+                startInfo.ExpirationDateUtc.Should().BeCloseTo( dateOriginExpirationToken, TimeSpan.FromMilliseconds( 100 ) );
             }
         }
     }
