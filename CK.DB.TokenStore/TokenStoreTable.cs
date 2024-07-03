@@ -84,7 +84,7 @@ namespace CK.DB.TokenStore
         /// <param name="extraData">The date. Can be null.</param>
         /// <returns>The awaitable.</returns>
         [SqlProcedure( "sTokenExtraDataSet" )]
-        public abstract Task SetExtraDataAsync( ISqlCallContext ctx, int actorId, int tokenId, byte[] extraData );
+        public abstract Task SetExtraDataAsync( ISqlCallContext ctx, int actorId, int tokenId, byte[]? extraData );
 
         /// <summary>
         /// Updates the token activity state and/or expiration date.
