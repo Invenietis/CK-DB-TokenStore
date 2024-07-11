@@ -6,7 +6,7 @@ using CK.DB.TokenStore.Tests.Helpers;
 using CK.SqlServer;
 using FluentAssertions;
 using NUnit.Framework;
-using static CK.Testing.DBSetupTestHelper;
+using static CK.Testing.MonitorTestHelper;
 
 namespace CK.DB.TokenStore.Tests
 {
@@ -16,7 +16,7 @@ namespace CK.DB.TokenStore.Tests
         [Test]
         public void create_and_destroy()
         {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            var tokenStoreTable = SharedEngine.Map.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext( TestHelper.Monitor ) )
             {
                 var info = tokenStoreTable.GenerateTestInvitationInfo();
@@ -38,7 +38,7 @@ namespace CK.DB.TokenStore.Tests
         [Test]
         public async Task create_and_destroy_Async()
         {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            var tokenStoreTable = SharedEngine.Map.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext( TestHelper.Monitor ) )
             {
                 var info = tokenStoreTable.GenerateTestInvitationInfo();
@@ -60,7 +60,7 @@ namespace CK.DB.TokenStore.Tests
         [Test]
         public void scoped_key_uniqueness()
         {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            var tokenStoreTable = SharedEngine.Map.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
                 var info = tokenStoreTable.GenerateTestInvitationInfo();
@@ -82,7 +82,7 @@ namespace CK.DB.TokenStore.Tests
         [TestCase( null )]
         public void invalid_or_missing_token_does_not_check( string token )
         {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            var tokenStoreTable = SharedEngine.Map.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
                 var result = tokenStoreTable.Check( ctx, 1, token );
@@ -100,7 +100,7 @@ namespace CK.DB.TokenStore.Tests
         [Test]
         public void token_expiration_is_boosted_by_at_least_5_minutes_when_token_is_checked()
         {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            var tokenStoreTable = SharedEngine.Map.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
                 var info = tokenStoreTable.GenerateTestInvitationInfo( DateTime.UtcNow.AddMinutes( 2 ) );
@@ -117,7 +117,7 @@ namespace CK.DB.TokenStore.Tests
         [Test]
         public void token_expiration()
         {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            var tokenStoreTable = SharedEngine.Map.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
                 var info = tokenStoreTable.GenerateTestInvitationInfo( DateTime.UtcNow.AddMilliseconds( 500 ) );
@@ -133,7 +133,7 @@ namespace CK.DB.TokenStore.Tests
         [Test]
         public async Task token_expiration_Async()
         {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            var tokenStoreTable = SharedEngine.Map.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
                 var info = tokenStoreTable.GenerateTestInvitationInfo( DateTime.UtcNow.AddMilliseconds( 500 ) );
@@ -149,7 +149,7 @@ namespace CK.DB.TokenStore.Tests
         [Test]
         public async Task token_expiration_and_ExtraData_set_Async()
         {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            var tokenStoreTable = SharedEngine.Map.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
                 var info = tokenStoreTable.GenerateTestInvitationInfo();
@@ -184,7 +184,7 @@ namespace CK.DB.TokenStore.Tests
         [Test]
         public async Task invalid_set_expiration_date_raises_an_exception_Async()
         {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            var tokenStoreTable = SharedEngine.Map.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
                 var info = tokenStoreTable.GenerateTestInvitationInfo();
@@ -200,7 +200,7 @@ namespace CK.DB.TokenStore.Tests
         [Test]
         public async Task token_inactive_Async()
         {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            var tokenStoreTable = SharedEngine.Map.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
                 var info = tokenStoreTable.GenerateTestInvitationInfo();
@@ -215,7 +215,7 @@ namespace CK.DB.TokenStore.Tests
         [Test]
         public async Task add_safe_time_superior_to_expiration_should_change()
         {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            var tokenStoreTable = SharedEngine.Map.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
                 var dateOriginExpirationToken = DateTime.UtcNow.AddSeconds( 10 );
@@ -233,7 +233,7 @@ namespace CK.DB.TokenStore.Tests
         [Test]
         public async Task add_safe_time_inferior_to_expiration_should_not_change_Async()
         {
-            var tokenStoreTable = TestHelper.StObjMap.StObjs.Obtain<TokenStoreTable>();
+            var tokenStoreTable = SharedEngine.Map.StObjs.Obtain<TokenStoreTable>();
             using( var ctx = new SqlStandardCallContext() )
             {
                 var dateOriginExpirationToken = DateTime.UtcNow.AddSeconds( 60 );
